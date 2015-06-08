@@ -27,6 +27,7 @@ ART_BUILD_TARGET_NDEBUG ?= true
 ART_BUILD_TARGET_DEBUG ?= false
 ART_BUILD_HOST_NDEBUG ?= true
 ART_BUILD_HOST_DEBUG ?= false
+ART_BUILD_HOST_STATIC ?= false
 
 ifeq ($(ART_BUILD_TARGET_NDEBUG),false)
 $(info Disabling ART_BUILD_TARGET_NDEBUG)
@@ -39,6 +40,9 @@ $(info Disabling ART_BUILD_HOST_NDEBUG)
 endif
 ifeq ($(ART_BUILD_HOST_DEBUG),false)
 $(info Disabling ART_BUILD_HOST_DEBUG)
+endif
+ifeq ($(ART_BUILD_HOST_STATIC),true)
+$(info Enabling ART_BUILD_HOST_STATIC)
 endif
 
 #
