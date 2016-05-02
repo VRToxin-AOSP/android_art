@@ -23,11 +23,10 @@ include art/build/Android.common_utils.mk
 #
 # Only non-debug targets are used to improve performance.
 #
-ART_BUILD_TARGET_NDEBUG ?= true
-ART_BUILD_TARGET_DEBUG ?= false
-ART_BUILD_HOST_NDEBUG ?= true
-ART_BUILD_HOST_DEBUG ?= false
-ART_BUILD_HOST_STATIC ?= false
+ART_BUILD_TARGET_NDEBUG := true
+ART_BUILD_TARGET_DEBUG := false
+ART_BUILD_HOST_NDEBUG := true
+ART_BUILD_HOST_DEBUG := false
 
 ifeq ($(ART_BUILD_TARGET_NDEBUG),false)
 $(info Disabling ART_BUILD_TARGET_NDEBUG)
@@ -40,9 +39,6 @@ $(info Disabling ART_BUILD_HOST_NDEBUG)
 endif
 ifeq ($(ART_BUILD_HOST_DEBUG),false)
 $(info Disabling ART_BUILD_HOST_DEBUG)
-endif
-ifeq ($(ART_BUILD_HOST_STATIC),true)
-$(info Enabling ART_BUILD_HOST_STATIC)
 endif
 
 #
@@ -65,13 +61,9 @@ ART_TARGET_CFLAGS :=
 ART_HOST_CLANG := false
 
 # Clang on the target. Target builds use GCC by default.
-ifneq ($(USE_CLANG_PLATFORM_BUILD),)
-ART_TARGET_CLANG := $(USE_CLANG_PLATFORM_BUILD)
-else
-ART_TARGET_CLANG := false
-endif
-ART_TARGET_CLANG_arm := false
-ART_TARGET_CLANG_arm64 := false
+ART_TARGET_CLANG := true
+ART_TARGET_CLANG_arm := true
+ART_TARGET_CLANG_arm64 := true
 
 define set-target-local-clang-vars
     LOCAL_CLANG := $(ART_TARGET_CLANG)
@@ -84,9 +76,9 @@ endef
 # GCC-only warnings.
 art_gcc_cflags := -Wunused-but-set-parameter
 
-# Undefine local variables now their use has ended.
-undefine art_clang_cflags
-undefine art_gcc_cflags
+# Clear local variables now their use has ended.
+art_clang_cflags :=
+art_gcc_cflags :=
 
 ART_CPP_EXTENSION := .cc
 
@@ -104,7 +96,6 @@ art_cflags := \
   -std=gnu++11 \
   -ggdb3 \
   -Wall \
-  -Wextra \
   -Wstrict-aliasing \
   -fstrict-aliasing \
   -Wunreachable-code \
@@ -117,7 +108,9 @@ art_cflags := \
 # Missing declarations: too many at the moment, as we use "extern" quite a bit.
 #  -Wmissing-declarations \
 
-art_cflags += -DART_USE_OPTIMIZING_COMPILER=1
+ifeq ($(ART_USE_OPTIMIZING_COMPILER),true)
+  art_cflags += -DART_USE_OPTIMIZING_COMPILER=1
+endif
 
 ifdef ART_IMT_SIZE
   art_cflags += -DIMT_SIZE=$(ART_IMT_SIZE)
@@ -139,12 +132,10 @@ ifeq ($(ART_USE_TLAB),true)
 endif
 
 # Cflags for non-debug ART and ART tools.
-art_non_debug_cflags := \
-  -O3
+art_non_debug_cflags := -O3
 
 # Cflags for debug ART and ART tools.
-art_debug_cflags := \
-  $(art_non_debug_cflags)
+art_debug_cflags := $(art_non_debug_cflags)
 
 art_host_non_debug_cflags := $(art_non_debug_cflags)
 art_target_non_debug_cflags := $(art_non_debug_cflags)
@@ -154,15 +145,11 @@ ifeq ($(HOST_OS),linux)
   ifneq ($(ART_COVERAGE),true)
     ifneq ($(NATIVE_COVERAGE),true)
       ifndef SANITIZE_HOST
-        art_host_non_debug_cflags +=
+        art_host_non_debug_cflags += -Wframe-larger-than=2700
       endif
-      art_target_non_debug_cflags +=
+      art_target_non_debug_cflags += -Wframe-larger-than=1728
     endif
   endif
-endif
-
-ifndef LIBART_IMG_HOST_BASE_ADDRESS
-  $(error LIBART_IMG_HOST_BASE_ADDRESS unset)
 endif
 
 ART_HOST_CFLAGS += $(art_cflags) -DART_BASE_ADDRESS=$(LIBART_IMG_HOST_BASE_ADDRESS)
@@ -199,14 +186,14 @@ ART_TARGET_CFLAGS += -DART_BASE_ADDRESS_MAX_DELTA=$(LIBART_IMG_TARGET_MAX_BASE_A
 # To use oprofile_android --callgraph, uncomment this and recompile with "mmm art -B -j16"
 # ART_TARGET_CFLAGS += -fno-omit-frame-pointer -marm -mapcs
 
-# Undefine locals now they've served their purpose.
-undefine art_cflags
-undefine art_debug_cflags
-undefine art_non_debug_cflags
-undefine art_host_non_debug_cflags
-undefine art_target_non_debug_cflags
-undefine art_default_gc_type
-undefine art_default_gc_type_cflags
+# Clear locals now they've served their purpose.
+art_cflags :=
+art_debug_cflags :=
+art_non_debug_cflags :=
+art_host_non_debug_cflags :=
+art_target_non_debug_cflags :=
+art_default_gc_type :=
+art_default_gc_type_cflags :=
 
 # GCC lacks libc++ assumed atomic operations, grab via libatomic.
 ART_HOST_LDLIBS += -latomic
@@ -224,8 +211,8 @@ define set-target-local-cflags-vars
     LOCAL_CFLAGS += $(ART_TARGET_NON_DEBUG_CFLAGS)
   endif
 
-  # Undefine locally used variables.
-  undefine art_target_cflags_ndebug_or_debug
+  # Clear locally used variables.
+  art_target_cflags_ndebug_or_debug :=
 endef
 
 # Build host and target as non-debug.
